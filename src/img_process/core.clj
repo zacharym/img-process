@@ -19,18 +19,22 @@
      '6': 251,
      '7': 255,")
 
-;;clojure.string/split
+(defn clean-text [dirty-text] (vec (-> dirty-text
+                                   (clojure.string/replace #"['\s]" "")
+                                   (clojure.string/replace #"[,]" "\n")
+                                   (clojure.string/replace #"[:]" " ")
+                                   (clojure.string/split #"\n"))))
 
+(def sample2 (clean-text sample))
 
-(defn clean-text [pix-text] (clojure.string/split (purge-chars pix-text) #"\n"))
+(defn get-val [string-pair] (-> string-pair
+                                (clojure.string/split #"\s")
+                                (second)
+                                (Integer/parseInt)))
 
-(defn purge-chars [dirty-text] (clojure.string/replace
-                                 (clojure.string/replace
-                                   (clojure.string/replace dirty-text
-                                                           #"['\s]" "")
-                                  #"[,]" "\n")
-                                #"[:]" " "))
+(defn get-px-data [px-text]
+  (apply hash-map (interleave
+                   [:r :g :b :a]
+                   (mapv get-val (clean-text px-text)))))
 
-(def sample1 (clean-text sample))
-sample1
 
