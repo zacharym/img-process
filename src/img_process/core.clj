@@ -20,3 +20,4 @@
   (line-seq rdr)
   (doseq [l (partition 4 (line-seq rdr))]
       (println (px-val (take 3 l)))))
+
