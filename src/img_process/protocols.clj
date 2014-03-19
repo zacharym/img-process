@@ -1,4 +1,4 @@
-(ns protocols
+(ns protocols.core
   (:require [clojure.java.io :refer [as-file file]])
   (:import java.io.File
            java.io.InputStream

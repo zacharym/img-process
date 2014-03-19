@@ -1,6 +1,6 @@
-(ns image-access
+(ns image-access.core
   (:require [clojure.java.io :refer [file resource]])
-  (:require [protocols :as protos])
+  (:require [protocols.core :as protos])
   (:import  [java.awt.image BufferedImage BufferedImageOp])
   (:import  [java.awt.color]))
 
@@ -34,35 +34,32 @@
 (defn get-row-score [width pos-y src]
   "returns a sum of the binary pixel score for the row of pixels at pos-y"
   (let [inds (vec (range width))]
-    (reduce + (map #(get-px-bin % 39 text) inds))))
+    (reduce + (map #(get-px-bin % pos-y text) inds))))
 
-(def inds (vec (range 600)))
+(defn get-row-scores [height width src]
+  "returns a vector of row scores (sums of binary px scores) for each row of image"
+  (let [inds (vec (range height))]
+    (map #(get-row-score width % src) inds)))
 
-(reduce + (map #(get-px-bin % 54 text) inds))
+(defn std-dev [values]
+  (let [mean
+        (/ (reduce + values) (count values))]
+    mean))
 
+(/ (reduce + rs) (count rs))
 
-(get-row-score 600 62 text)
 
 (def text (load-image-resource "resources/written.jpg"))
+
+(def rs (get-row-scores 288 600 text))
+
+(get-row-score 600 29 text)
+
+(.getWidth text)
+
+(.getHeight text)
+
 
 text
 
 (get-row-score 600 35 (load-image-resource "resources/written.jpg"))
-
-(defn get-row-scores [height width src]
-  ())
-
-
-
-(get-px-bin 0 1 text)
-(get-px-bin 157 31 text)
-
-(def c1 (new java.awt.Color (.getRGB text 0 0)))
-
-(.getBlue c1)
-
-
-
-
-(.getHeight text)
-(.getWidth text)
