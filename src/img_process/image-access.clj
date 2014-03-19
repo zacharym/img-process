@@ -1,8 +1,11 @@
-(ns image-access.core
+(ns image-access
   (:require [clojure.java.io :refer [file resource]])
-  (:require [protocols.core :as protos])
+  (:require [protocols :as protos])
+  (:require [clojure.math.numeric-tower :as math])
   (:import  [java.awt.image BufferedImage BufferedImageOp])
   (:import  [java.awt.color]))
+
+(math/expt 2 4)
 
 (defn new-buffered
   "Creates java buffered image"
@@ -34,7 +37,7 @@
 (defn get-row-score [width pos-y src]
   "returns a sum of the binary pixel score for the row of pixels at pos-y"
   (let [inds (vec (range width))]
-    (reduce + (map #(get-px-bin % pos-y text) inds))))
+    (reduce + (map #(get-px-bin % pos-y src) inds))))
 
 (defn get-row-scores [height width src]
   "returns a vector of row scores (sums of binary px scores) for each row of image"
@@ -43,16 +46,20 @@
 
 (defn std-dev [values]
   (let [mean
-        (/ (reduce + values) (count values))]
+        ((/ (reduce + values)) (count values))]
     mean))
 
-(/ (reduce + rs) (count rs))
 
+
+
+
+
+(/ (reduce + rs) (count rs))
 
 (def text (load-image-resource "resources/written.jpg"))
 
 (def rs (get-row-scores 288 600 text))
-
+rs
 (get-row-score 600 29 text)
 
 (.getWidth text)
