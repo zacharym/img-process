@@ -5,7 +5,6 @@
   (:import  [java.awt.image BufferedImage BufferedImageOp])
   (:import  [java.awt.color]))
 
-(math/expt 2 4)
 
 (defn new-buffered
   "Creates java buffered image"
@@ -44,29 +43,17 @@
   (let [inds (vec (range height))]
     (map #(get-row-score width % src) inds)))
 
-(defn std-dev [values]
-  (let [mean
-        ((/ (reduce + values)) (count values))]
-    mean))
+(defn get-non-zeros [values]
+  (filter pos? values))
 
+(defn get-mean [values] (float (/ (reduce + values) (count values))))
 
-
-
-
-
-(/ (reduce + rs) (count rs))
+(defn std-dev [values] (let [mean (get-mean values)]
+  (math/sqrt (/ (reduce + (map #(math/expt (- % mean) 2) values)) (- (count values) 1)))))
 
 (def text (load-image-resource "resources/written.jpg"))
 
-(def rs (get-row-scores 288 600 text))
-rs
-(get-row-score 600 29 text)
-
-(.getWidth text)
-
-(.getHeight text)
+(def rss (get-row-scores 288 600 text))
 
 
-text
 
-(get-row-score 600 35 (load-image-resource "resources/written.jpg"))
