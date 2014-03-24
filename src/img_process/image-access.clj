@@ -44,16 +44,49 @@
     (map #(get-row-score width % src) inds)))
 
 (defn get-non-zeros [values]
+  "returns the vector of only the positive values"
   (filter pos? values))
 
-(defn get-mean [values] (float (/ (reduce + values) (count values))))
+(defn get-mean [values]
+  "returns the mean of a vector"
+  (float (/ (reduce + values) (count values))))
 
-(defn std-dev [values] (let [mean (get-mean values)]
+(defn std-dev [values]
+  "returns the standard deviation of a vector"
+  (let [mean (get-mean values)]
   (math/sqrt (/ (reduce + (map #(math/expt (- % mean) 2) values)) (- (count values) 1)))))
+
+(defn get-std-diff [std-dev mean value]
+  "returns the distance from the mean as measured in number of standard deviations"
+  (/ (- value mean) std-dev))
+
+(defn get-std-diff-values [values]
+  "maps the values of a vector to their distances from the mean of the values in terms of standard deviations,
+  returns 0 for 0. Standard deviation and mean represent the vector without any zeros"
+  (let [mean (get-mean (get-non-zeros values))
+        std-dev (std-dev (get-non-zeros values))]
+    (map #(get-std-diff std-dev mean %) values)))
+
+
+
+
 
 (def text (load-image-resource "resources/written.jpg"))
 
 (def rss (get-row-scores 288 600 text))
 
+(def std-diffs (get-std-diff-values rss))
+
+(def pos-std-diff-seqs (reduce (fn [res number]
+            (if (pos? number)
+              (update-in res [(dec (count res))] (fnil conj []) number)
+              (assoc res (count res) [])))
+        []
+        std-diffs))
+
+(def text-lines (filter #(if (pos? (count %))
+           true
+           false) pos-std-diff-seqs))
 
 
+(def thickest (apply max (map #(count %) text-lines)))
