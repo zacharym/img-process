@@ -29,7 +29,7 @@
   "retuns a binary score for whether or not a mark is present at a particular
   pixel location"
   (let [c (new java.awt.Color (.getRGB src pos-x pos-y))]
-   (if (<= 70 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
+   (if (<= 120 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
      0
      1)))
 
@@ -42,6 +42,17 @@
   "returns a vector of row scores (sums of binary px scores) for each row of image"
   (let [inds (vec (range height))]
     (map #(get-row-score width % src) inds)))
+
+(defn get-column-score [begin end pos-x src]
+  "returns a sum of the binary pixel scores for a column of pixels for a row defined by begin and end"
+  (let [inds (vec (range begin end))]
+    (reduce + (map #(get-px-bin pos-x % src) inds))))
+
+(defn get-column-scores [begin end src]
+  "returns a vector of column scores for each column of text beginning and ending at the row specified
+  by begin and end"
+  (let [inds (vec (range (.getWidth src)))]
+    (map #(get-column-score begin end % src) inds)))
 
 (defn get-non-zeros [values]
   "returns the vector of only the positive values"
@@ -67,15 +78,50 @@
         std-dev (std-dev (get-non-zeros values))]
     (map #(get-std-diff std-dev mean %) values)))
 
+(defn get-std-diff-values2 [values]
+  "maps the values of a vector to their distances from the mean of the values in terms of standard deviations,
+  returns 0 for 0. Standard deviation and mean represent the complete vector including zeros"
+  (let [mean (get-mean values)
+        std-dev (std-dev values)]
+    (map #(get-std-diff std-dev mean %) values)))
 
-
-
-
+;; source image
 (def text (load-image-resource "resources/written.jpg"))
 
-(def rss (get-row-scores 288 600 text))
+;; scoring rows for how many pixels are marked
+(def rss (get-row-scores (.getHeight text) (.getWidth text) text))
 
-(def std-diffs (get-std-diff-values rss))
+;; distances from mean as f(std-dev)
+(def std-diffs (get-std-diff-values2 rss))
+
+;; hash map of distances
+(def row-map (apply sorted-map (interleave (range (count std-diffs)) std-diffs)))
+
+;; continous rows where fill is greater than average
+(def continuous-fill (reduce (fn [res number]
+            (if (pos? (val number))
+              (update-in res [(dec (count res))] (fnil conj []) (key number))
+              (assoc res (count res) [])))
+        []
+        row-map))
+
+;; continuously filled rows where row is greater than 3 pixel thick
+(def text-rows (filter #(if (< 3 (count %))
+                          true
+                          false) continuous-fill))
+
+;; grabbing the row bounds
+(def row-bounds (map #(let [padding (math/round (/ (count %) 4))]
+         (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) text-rows))
+
+row-bounds
+
+
+;; get the starting
+;; make new bufferedImages of the rows
+;; find darkenss distributions for the columns
+;; find continuous markings vertically to split to letters
+
 
 (def pos-std-diff-seqs (reduce (fn [res number]
             (if (pos? number)
@@ -90,3 +136,4 @@
 
 
 (def thickest (apply max (map #(count %) text-lines)))
+
