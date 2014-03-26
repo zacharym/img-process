@@ -43,16 +43,6 @@
   (let [inds (vec (range height))]
     (map #(get-row-score width % src) inds)))
 
-(defn get-column-score [begin end pos-x src]
-  "returns a sum of the binary pixel scores for a column of pixels for a row defined by begin and end"
-  (let [inds (vec (range begin end))]
-    (reduce + (map #(get-px-bin pos-x % src) inds))))
-
-(defn get-column-scores [begin end src]
-  "returns a vector of column scores for each column of text beginning and ending at the row specified
-  by begin and end"
-  (let [inds (vec (range (.getWidth src)))]
-    (map #(get-column-score begin end % src) inds)))
 
 (defn get-non-zeros [values]
   "returns the vector of only the positive values"
@@ -85,6 +75,44 @@
         std-dev (std-dev values)]
     (map #(get-std-diff std-dev mean %) values)))
 
+;; hash map of distances
+(defn mapper [values] (apply sorted-map (interleave (range (count values)) values)))
+
+;; continous sub-vectors where all values are positive
+(defn  get-continuous-fill [values] (reduce (fn [res number]
+            (if (pos? (val number))
+              (update-in res [(dec (count res))] (fnil conj []) (key number))
+              (assoc res (count res) [])))
+        []
+        values))
+
+(defn get-bounds-with-padding [values]
+  (map #(let [padding (math/round (/ (count %) 4))]
+         (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) values))
+
+(defn get-bounds [values]
+  (map #(assoc {} :begin (first %) :end (last %)) values))
+
+(defn get-column-score [begin end pos-x src]
+  "returns a sum of the binary pixel scores for a column of pixels for a row defined by begin and end"
+  (let [inds (vec (range begin end))]
+    (reduce + (map #(get-px-bin pos-x % src) inds))))
+
+(defn get-column-scores [begin end src]
+  "returns a vector of column scores for each column of text beginning and ending at the row specified
+  by begin and end"
+  (let [inds (vec (range (.getWidth src)))]
+    (map #(get-column-score begin end % src) inds)))
+
+(defn strip-empties [values]
+  (filter #(pos? (count %)) values))
+
+(defn get-char-map [begin end src]
+  (strip-empties (get-continuous-fill (mapper (get-column-scores begin end src)))))
+
+(defn get-letters [begin end src]
+  (strip-empties (get-continuous-fill (mapper (get-column-scores begin end src)))))
+
 ;; source image
 (def text (load-image-resource "resources/written.jpg"))
 
@@ -94,46 +122,18 @@
 ;; distances from mean as f(std-dev)
 (def std-diffs (get-std-diff-values2 rss))
 
-;; hash map of distances
-(def row-map (apply sorted-map (interleave (range (count std-diffs)) std-diffs)))
 
-;; continous rows where fill is greater than average
-(def continuous-fill (reduce (fn [res number]
-            (if (pos? (val number))
-              (update-in res [(dec (count res))] (fnil conj []) (key number))
-              (assoc res (count res) [])))
-        []
-        row-map))
+(def row-map (mapper std-diffs))
 
 ;; continuously filled rows where row is greater than 3 pixel thick
 (def text-rows (filter #(if (< 3 (count %))
                           true
-                          false) continuous-fill))
-
-;; grabbing the row bounds
-(def row-bounds (map #(let [padding (math/round (/ (count %) 4))]
-         (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) text-rows))
-
-row-bounds
+                          false) (get-continuous-fill row-map)))
 
 
-;; get the starting
-;; make new bufferedImages of the rows
-;; find darkenss distributions for the columns
-;; find continuous markings vertically to split to letters
+;;top and bottom of each row
+(def row-bounds (get-bounds-with-padding text-rows))
 
-
-(def pos-std-diff-seqs (reduce (fn [res number]
-            (if (pos? number)
-              (update-in res [(dec (count res))] (fnil conj []) number)
-              (assoc res (count res) [])))
-        []
-        std-diffs))
-
-(def text-lines (filter #(if (pos? (count %))
-           true
-           false) pos-std-diff-seqs))
-
-
-(def thickest (apply max (map #(count %) text-lines)))
+;;right and left side of each letter in each row
+(def letter-bounds (map #(get-bounds (strip-empties (get-continuous-fill (mapper (get-column-scores (:begin %) (:end %) text))))) row-bounds))
 
