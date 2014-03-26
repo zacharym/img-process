@@ -136,4 +136,3 @@
 
 ;;right and left side of each letter in each row
 (def letter-bounds (map #(get-bounds (strip-empties (get-continuous-fill (mapper (get-column-scores (:begin %) (:end %) text))))) row-bounds))
-
