@@ -28,9 +28,9 @@
   "retuns a binary score for whether or not a mark is present at a particular
   pixel location"
   (let [c (new java.awt.Color (.getRGB src pos-x pos-y))]
-   (if (<= 120 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
-     0
-     1)))
+    (if (<= 120 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
+      0
+      1)))
 
 (defn get-row-score [width pos-y src]
   "returns a sum of the binary pixel score for the row of pixels at pos-y"
@@ -54,7 +54,7 @@
 (defn std-dev [values]
   "returns the standard deviation of a vector"
   (let [mean (get-mean values)]
-  (math/sqrt (/ (reduce + (map #(math/expt (- % mean) 2) values)) (- (count values) 1)))))
+    (math/sqrt (/ (reduce + (map #(math/expt (- % mean) 2) values)) (- (count values) 1)))))
 
 (defn get-std-diff [std-dev mean value]
   "returns the distance from the mean as measured in number of standard deviations"
@@ -79,15 +79,15 @@
 
 ;; continous sub-vectors where all values are positive
 (defn  get-continuous-fill [values] (reduce (fn [res number]
-            (if (pos? (val number))
-              (update-in res [(dec (count res))] (fnil conj []) (key number))
-              (assoc res (count res) [])))
-        []
-        values))
+                                              (if (pos? (val number))
+                                                (update-in res [(dec (count res))] (fnil conj []) (key number))
+                                                (assoc res (count res) [])))
+                                            []
+                                            values))
 
 (defn get-bounds-with-padding [values]
   (map #(let [padding (math/round (/ (count %) 4))]
-         (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) values))
+          (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) values))
 
 (defn get-bounds [values]
   (map #(assoc {} :begin (first %) :end (last %)) values))
