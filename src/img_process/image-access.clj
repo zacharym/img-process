@@ -143,4 +143,11 @@
 (def row-bounds (get-bounds-with-padding text-rows))
 
 ;;right and left side of each letter in each row
-(def letter-bounds (map #(get-bounds (strip-empties (get-continuous-fill (mapper (get-column-scores (:begin %) (:end %) text))))) row-bounds))
+(def letter-bounds
+  (map (fn [{:keys [begin end]}]
+         (-> (get-column-scores begin end text)
+             mapper
+             get-continuous-fill
+             strip-empties
+             get-bounds))
+       row-bounds))
