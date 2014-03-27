@@ -1,6 +1,6 @@
-(ns image-access
+(ns img-process.image-access
   (:require [clojure.java.io :refer [file resource]])
-  (:require [protocols :as protos])
+  (:require [img-process.protocols :as protos])
   (:require [clojure.math.numeric-tower :as math])
   (:import  [java.awt.image BufferedImage BufferedImageOp])
   (:import  [java.awt.color]))

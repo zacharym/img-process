@@ -1,4 +1,4 @@
-(ns protocols
+(ns img-process.protocols
   (:require [clojure.java.io :refer [as-file file]])
   (:import java.io.File
            java.io.InputStream
