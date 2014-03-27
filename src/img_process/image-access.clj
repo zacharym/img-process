@@ -115,12 +115,6 @@
 (defn strip-empties [values]
   (filter #(pos? (count %)) values))
 
-(defn get-char-map [begin end src]
-  (strip-empties (get-continuous-fill (mapper (get-column-scores begin end src)))))
-
-(defn get-letters [begin end src]
-  (strip-empties (get-continuous-fill (mapper (get-column-scores begin end src)))))
-
 ;; source image
 (def text (load-image-resource "resources/written.jpg"))
 
