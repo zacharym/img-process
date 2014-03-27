@@ -78,19 +78,25 @@
     (map #(get-std-diff std-dev mean %) values)))
 
 ;; hash map of distances
-(defn mapper [values] (apply sorted-map (interleave (range (count values)) values)))
+(defn mapper [values]
+  (into (sorted-map)
+        (map-indexed vector values)))
 
 ;; continous sub-vectors where all values are positive
-(defn  get-continuous-fill [values] (reduce (fn [res number]
-                                              (if (pos? (val number))
-                                                (update-in res [(dec (count res))] (fnil conj []) (key number))
-                                                (assoc res (count res) [])))
-                                            []
-                                            values))
+(defn get-continuous-fill [values]
+  (reduce (fn [res number]
+            (if (pos? (val number))
+              (update-in res [(dec (count res))] (fnil conj []) (key number))
+              (assoc res (count res) [])))
+          []
+          values))
 
 (defn get-bounds-with-padding [values]
-  (map #(let [padding (math/round (/ (count %) 4))]
-          (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) values))
+  (map (fn [val]
+         (let [padding (math/round (/ (count val) 4))]
+           (assoc {} :begin (- (first val) padding)
+                     :end (+ (last val) padding))))
+       values))
 
 (defn get-bounds [values]
   (map #(assoc {} :begin (first %) :end (last %)) values))
