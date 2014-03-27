@@ -1,10 +1,9 @@
 (ns img-process.image-access
-  (:require [clojure.java.io :refer [file resource]])
-  (:require [img-process.protocols :as protos])
-  (:require [clojure.math.numeric-tower :as math])
-  (:import  [java.awt.image BufferedImage BufferedImageOp])
-  (:import  [java.awt.color]))
-
+  (:require [clojure.java.io :refer [file resource]]
+            [img-process.protocols :as protos]
+            [clojure.math.numeric-tower :as math])
+  (:import  [java.awt.image BufferedImage BufferedImageOp]
+            [awt.color]))
 
 (defn new-buffered
   "Creates java buffered image"
