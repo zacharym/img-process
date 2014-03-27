@@ -53,8 +53,11 @@
 
 (defn std-dev [values]
   "returns the standard deviation of a vector"
-  (let [mean (get-mean values)]
-    (math/sqrt (/ (reduce + (map #(math/expt (- % mean) 2) values)) (- (count values) 1)))))
+  (let [mean (get-mean values)
+        squared-deviations (map #(math/expt (- % mean) 2) values)
+        variance (/ (reduce + squared-deviations)
+                    (dec (count values)))]
+    (math/sqrt variance)))
 
 (defn get-std-diff [std-dev mean value]
   "returns the distance from the mean as measured in number of standard deviations"
