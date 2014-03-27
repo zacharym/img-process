@@ -1,10 +1,9 @@
-(ns image-access
-  (:require [clojure.java.io :refer [file resource]])
-  (:require [protocols :as protos])
-  (:require [clojure.math.numeric-tower :as math])
-  (:import  [java.awt.image BufferedImage BufferedImageOp])
-  (:import  [java.awt.color]))
-
+(ns img-process.image-access
+  (:require [clojure.java.io :refer [file resource]]
+            [img-process.protocols :as protos]
+            [clojure.math.numeric-tower :as math])
+  (:import  [java.awt.image BufferedImage BufferedImageOp]
+            [awt.color]))
 
 (defn new-buffered
   "Creates java buffered image"
@@ -29,9 +28,9 @@
   "retuns a binary score for whether or not a mark is present at a particular
   pixel location"
   (let [c (new java.awt.Color (.getRGB src pos-x pos-y))]
-   (if (<= 120 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
-     0
-     1)))
+    (if (<= 120 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
+      0
+      1)))
 
 (defn get-row-score [width pos-y src]
   "returns a sum of the binary pixel score for the row of pixels at pos-y"
@@ -54,8 +53,11 @@
 
 (defn std-dev [values]
   "returns the standard deviation of a vector"
-  (let [mean (get-mean values)]
-  (math/sqrt (/ (reduce + (map #(math/expt (- % mean) 2) values)) (- (count values) 1)))))
+  (let [mean (get-mean values)
+        squared-deviations (map #(math/expt (- % mean) 2) values)
+        variance (/ (reduce + squared-deviations)
+                    (dec (count values)))]
+    (math/sqrt variance)))
 
 (defn get-std-diff [std-dev mean value]
   "returns the distance from the mean as measured in number of standard deviations"
@@ -76,19 +78,25 @@
     (map #(get-std-diff std-dev mean %) values)))
 
 ;; hash map of distances
-(defn mapper [values] (apply sorted-map (interleave (range (count values)) values)))
+(defn mapper [values]
+  (into (sorted-map)
+        (map-indexed vector values)))
 
 ;; continous sub-vectors where all values are positive
-(defn  get-continuous-fill [values] (reduce (fn [res number]
+(defn get-continuous-fill [values]
+  (reduce (fn [res number]
             (if (pos? (val number))
               (update-in res [(dec (count res))] (fnil conj []) (key number))
               (assoc res (count res) [])))
-        []
-        values))
+          []
+          values))
 
 (defn get-bounds-with-padding [values]
-  (map #(let [padding (math/round (/ (count %) 4))]
-         (assoc {} :begin (- (first %) padding) :end (+ (last %) padding))) values))
+  (map (fn [val]
+         (let [padding (math/round (/ (count val) 4))]
+           (assoc {} :begin (- (first val) padding)
+                     :end (+ (last val) padding))))
+       values))
 
 (defn get-bounds [values]
   (map #(assoc {} :begin (first %) :end (last %)) values))
@@ -106,12 +114,6 @@
 
 (defn strip-empties [values]
   (filter #(pos? (count %)) values))
-
-(defn get-char-map [begin end src]
-  (strip-empties (get-continuous-fill (mapper (get-column-scores begin end src)))))
-
-(defn get-letters [begin end src]
-  (strip-empties (get-continuous-fill (mapper (get-column-scores begin end src)))))
 
 ;; source image
 (def text (load-image-resource "resources/written.jpg"))
@@ -135,4 +137,11 @@
 (def row-bounds (get-bounds-with-padding text-rows))
 
 ;;right and left side of each letter in each row
-(def letter-bounds (map #(get-bounds (strip-empties (get-continuous-fill (mapper (get-column-scores (:begin %) (:end %) text))))) row-bounds))
+(def letter-bounds
+  (map (fn [{:keys [begin end]}]
+         (-> (get-column-scores begin end text)
+             mapper
+             get-continuous-fill
+             strip-empties
+             get-bounds))
+       row-bounds))

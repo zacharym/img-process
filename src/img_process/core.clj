@@ -1,5 +1,5 @@
 (ns img-process.core
-  (:require [image-access :as ims]))
+  (:require [img-process.image-access :as ims]))
 
 (def text (ims/load-image-resource "resources/written.jpg"))
 
