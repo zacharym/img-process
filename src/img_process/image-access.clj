@@ -115,29 +115,7 @@
 (defn strip-empties [values]
   (filter #(pos? (count %)) values))
 
-;; source image
-(def text (load-image-resource "resources/written.jpg"))
-
-;; scoring rows for how many pixels are marked
-(def rss (get-row-scores (.getHeight text) (.getWidth text) text))
-
-;; distances from mean as f(std-dev)
-(def std-diffs (get-std-diff-values2 rss))
-
-
-(def row-map (mapper std-diffs))
-
-;; continuously filled rows where row is greater than 3 pixel thick
-(def text-rows (filter #(if (< 3 (count %))
-                          true
-                          false) (get-continuous-fill row-map)))
-
-
-;;top and bottom of each row
-(def row-bounds (get-bounds-with-padding text-rows))
-
-;;right and left side of each letter in each row
-(def letter-bounds
+(defn get-letter-bounds [row-bounds]
   (map (fn [{:keys [begin end]}]
          (-> (get-column-scores begin end text)
              mapper
@@ -145,3 +123,27 @@
              strip-empties
              get-bounds))
        row-bounds))
+
+(defn get-row-bounds [src]
+  (let [text (load-image-resource src)]
+    (-> (get-row-scores (.getHeight text) (.getWidth text) text)
+        get-std-diff-values2
+        mapper
+        get-continuous-fill
+        strip-empties
+        get-bounds-with-padding)))
+(load-image-resource "resources/written.jpg")
+
+(defn get-full-bounds [src]
+  (let [row-bounds (get-row-bounds src)]
+  {:rows row-bounds :letters (get-letter-bounds row-bounds)}))
+
+
+(get-row-bounds "resources/written.jpg")
+
+(get-letter-bounds (get-row-bounds "resources/written.jpg"))
+
+(get-full-bounds "resources/written.jpg")
+
+
+
