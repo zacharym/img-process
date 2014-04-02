@@ -115,9 +115,9 @@
 (defn strip-empties [values]
   (filter #(pos? (count %)) values))
 
-(defn get-letter-bounds [row-bounds]
-  (map (fn [{:keys [begin end]}]
-         (-> (get-column-scores begin end text)
+(defn get-letter-bounds [row-bounds src]
+    (map (fn [{:keys [begin end]}]
+         (-> (get-column-scores begin end src)
              mapper
              get-continuous-fill
              strip-empties
@@ -125,23 +125,22 @@
        row-bounds))
 
 (defn get-row-bounds [src]
-  (let [text (load-image-resource src)]
-    (-> (get-row-scores (.getHeight text) (.getWidth text) text)
+    (-> (get-row-scores (.getHeight src) (.getWidth src) src)
         get-std-diff-values2
         mapper
         get-continuous-fill
         strip-empties
-        get-bounds-with-padding)))
+        get-bounds-with-padding))
 (load-image-resource "resources/written.jpg")
 
 (defn get-full-bounds [src]
-  (let [row-bounds (get-row-bounds src)]
-  {:rows row-bounds :letters (get-letter-bounds row-bounds)}))
+  (let [text (load-image-resource "resources/written.jpg") row-bounds (get-row-bounds text)]
+  {:rows row-bounds :letters (get-letter-bounds row-bounds text)}))
 
 
-(get-row-bounds "resources/written.jpg")
+(get-row-bounds (load-image-resource "resources/written.jpg"))
 
-(get-letter-bounds (get-row-bounds "resources/written.jpg"))
+(get-letter-bounds (get-row-bounds (load-image-resource "resources/written.jpg")) (load-image-resource "resources/written.jpg"))
 
 (get-full-bounds "resources/written.jpg")
 
