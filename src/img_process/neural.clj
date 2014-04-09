@@ -11,12 +11,16 @@
   [z]
   (/ 1 (+ 1 (math/expt 2.718281828 (* -1 z)))))
 
-(defn weights-init
+(defn biases-init [n]
+  "takes the number of neurons in a layer and returns a vector of randoms in range
+  [0,1) representing initial biases for that layer"
+  (vec (take n (repeatedly rand))))
+
+(defn weights-init [n-in n-hd]
   "takes the number of inputs and number of hidden neurons those inputs will go to, and
   initializes a weight of a random value in range [0,1) for each connection. Returns a
   2-D vector of weights"
-  [n-in n-hd]
-  (vec (map (fn [_] (vec (map (fn [_] (rand)) (vec (range n-in))))) (vec (range n-hd)))))
+  (vec (map #(biases-init %) (vec (repeat n-hd n-in)))))  ;;;why is the outer vec necessary here?
 
 (defn dot [vec0 vec1]
   "returns the dot product of two vectors"
@@ -31,7 +35,7 @@
     (vec (map #(sigmoid (- (dot (weight-vec %) in-vec) (bias-vec %))) (range (count bias-vec)))))
 
 (defn vec-length [vec1]
-  "returns the length of a vector in multiple dimensions (each element represents a length in a different
+  "returns the length of a vector in multiple dimensions (each element represents a scalar in a different
   dimension. Interestingly the pythagorean theorem is the 2 dimensional case of this."
   (->> vec1
    (map #(math/expt % 2))
@@ -90,6 +94,16 @@
                res
                (drop 1 lines)))))))))
 
+(defn reshape [vect width]
+  "takes a 1D vector and reshapes to as a 2d vector of the specified width"
+  (loop [i 0 f (/ (count vect) width) res []]
+    (if (>= i f)
+      res
+      (recur
+       (inc i)
+       f
+       (conj res (subvec vect (* i width) (+ width (* i width))))))))
+
 (defn set-cost [train-set weights-a biases-a weights-b biases-b]
   "takes a training set of key value pairs of inputs and results and returns the cost representing how
   wrong the weights and biases are for that random training set"
@@ -108,74 +122,32 @@
     0.01
     (* 0.9 value)))
 
+
 (defn train-network [training-data input-n layer-a-n layer-b-n sample-n]
   "takes an array of correct input/output pairs of training data, the number of inputs to the network, the
   number of neurons in the first and second layers, and the sample size for each training batch. Returns
   a key value mapping of `trained` weights and biases for the network. Works by randomly initializing weights
   and biases and then following a gradient decent algorithm to minimize the cost of the network over each
   generation w.r.t. each weight and bias."
-  )
+  (let [settings {:weights-a (weights-init input-n layer-a-n) :weights-b (weights-init layer-a-n layer-b-n)
+                  :biases-a (biases-init layer-a-n) :biases-b (biases-init layer-b-n)}]
+    (reduce
+     (fn [accum cur-set]
+       (compute-changes cur-set (:weights-a accum) (:biases-a accum) (:weights-b accum) (:biases-b accum)))
+     settings
+     training-data)))
 
-
-
-(def a (get-training-data 10 5))
-
-
-
-((init-weights-a 1) 1)
-(count (init-weights-a 0))
-
-
-(time (def sample-result (weights-a-change test-value-inputs init-weights-a init-biases-a init-weights-b init-biases-b)))
-(def sample-result2 (biases-a-change test-value-inputs init-weights-a init-biases-a init-weights-b init-biases-b))
-sample-result2
-(def sample-result)
-
-
-init-biases-a
-(def init-biases-aa [0.56 0.4321580631740959 0.57710040224414 0.6185965659086016 0.18969736398984938 0.8749276162565557 0.7980151147402715 0.664393999821422 0.9569106331833737 0.9815324868138454 0.3432571362384952 0.6501960631145083 0.3426291107100178 0.36863149128690365 0.7569718521150473])
-
-
-(map #(:result %) test-value-inputs)
-(count test-values)
-
-(set-cost test-value-inputs init-weights-a init-biases-a init-weights-b init-biases-b)
-(set-cost1 test-value-inputs init-weights-a in1it-biases-a init-weights-b init-biases-b)
-(set-cost2 test-value-inputs init-weights-a init-biases-a init-weights-b init-biases-b)
-test-value-inputs
-
-
-(evaluate (:input (test-value-inputs 1)) init-weights-a init-biases-a init-weights-b init-biases-b)
-
-
-
-
-(def init-weights-a (weights-init 784 15))
-(def init-weights-b (weights-init 15 10))
-
-(def init-biases-a (vec (map (fn [_] (rand)) (range 15))))
-(def init-biases-b (vec (map (fn [_] (rand)) (range 10))))
-
-(def test-input [0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.01171875 0.0703125 0.0703125 0.0703125 0.4921875 0.53125 0.68359375 0.1015625 0.6484375 0.99609375 0.96484375 0.49609375 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1171875 0.140625 0.3671875 0.6015625 0.6640625 0.98828125 0.98828125 0.98828125 0.98828125 0.98828125 0.87890625 0.671875 0.98828125 0.9453125 0.76171875 0.25 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.19140625 0.9296875 0.98828125 0.98828125 0.98828125 0.98828125 0.98828125 0.98828125 0.98828125 0.98828125 0.98046875 0.36328125 0.3203125 0.3203125 0.21875 0.15234375 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0703125 0.85546875 0.98828125 0.98828125 0.98828125 0.98828125 0.98828125 0.7734375 0.7109375 0.96484375 0.94140625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.3125 0.609375 0.41796875 0.98828125 0.98828125 0.80078125 0.04296875 0.0 0.16796875 0.6015625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0546875 0.00390625 0.6015625 0.98828125 0.3515625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.54296875 0.98828125 0.7421875 0.0078125 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.04296875 0.7421875 0.98828125 0.2734375 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.13671875 0.94140625 0.87890625 0.625 0.421875 0.00390625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.31640625 0.9375 0.98828125 0.98828125 0.46484375 0.09765625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.17578125 0.7265625 0.98828125 0.98828125 0.5859375 0.10546875 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0625 0.36328125 0.984375 0.98828125 0.73046875 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.97265625 0.98828125 0.97265625 0.25 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1796875 0.5078125 0.71484375 0.98828125 0.98828125 0.80859375 0.0078125 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.15234375 0.578125 0.89453125 0.98828125 0.98828125 0.98828125 0.9765625 0.7109375 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.09375 0.4453125 0.86328125 0.98828125 0.98828125 0.98828125 0.98828125 0.78515625 0.3046875 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.08984375 0.2578125 0.83203125 0.98828125 0.98828125 0.98828125 0.98828125 0.7734375 0.31640625 0.0078125 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0703125 0.66796875 0.85546875 0.98828125 0.98828125 0.98828125 0.98828125 0.76171875 0.3125 0.03515625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.21484375 0.671875 0.8828125 0.98828125 0.98828125 0.98828125 0.98828125 0.953125 0.51953125 0.04296875 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.53125 0.98828125 0.98828125 0.98828125 0.828125 0.52734375 0.515625 0.0625 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 ])
-(def test-output [0 0 0 0 0 1 0 0 0 0])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(defn compute-changes [train-set weights-a biases-a weights-b biases-b]
+  "accepts a training batch, weights and biases for the network, returns a settings collection
+  representing the new state of the network after following the gradient decent method to reduce error"
+  {:weights-a (weights-a-change train-set weights-a biases-a weights-b biases-b)
+   :biases-a (biases-a-change train-set weights-a biases-a weights-b biases-b)
+   :weights-b (weights-b-change train-set weights-a biases-a weights-b biases-b)
+   :biases-b (biases-b-change train-set weights-a biases-a weights-b biases-b)})
 
 
 (defn biases-a-change [train-set weights-a biases weights-b biases-b]
-  "takes a training set, a vector of biases for the first layer of connections, the rest of the network
+  "takes a training batch, a vector of biases for the first layer of connections, the rest of the network
   settings and returns an identity matrix where true means that the partial derivative of the total cost
   with respect to that neuron's bias is negative [for a step size of 10% of the current bias
   value] (increase that value to decrease the total cost)"
@@ -192,7 +164,7 @@ test-value-inputs
       (inc ct)))))
 
 (defn biases-b-change [train-set weights-a biases-a weights-b biases]
-  "takes a training set, a vector of biases for the second layer of connections, the rest of the network
+  "takes a training batch, a vector of biases for the second layer of connections, the rest of the network
   settings and returns an identity matrix where true means that the partial derivative of the total cost
   with respect to that neuron's bias is negative [for a step size of 10% of the current bias
   value] (increase that value to decrease the total cost)"
@@ -209,7 +181,7 @@ test-value-inputs
       (inc ct)))))
 
 (defn weights-a-change [train-set weights biases-a weights-b biases-b]
-  "takes a training set, a vector of weights for the first layer of connections, the rest of the network's
+  "takes a training batch, a vector of weights for the first layer of connections, the rest of the network's
   settings and returns an identiy matrix where true means that the partial derivative of the total cost
   with respect to that connection's weight is negative [for a step size of 10% of the weight's current
   value] (increase that value to decrease the total cost)"
@@ -234,7 +206,7 @@ test-value-inputs
       (inc outer-ct)))))
 
 (defn weights-b-change [train-set weights-a biases-a weights biases-b]
-  "takes a training set, a vector of weights for the second layer of connections, the rest of the networks
+  "takes a training batch, a vector of weights for the second layer of connections, the rest of the networks
   settings and returns an identiy matrix where true means that the partial derivative of the total cost
   with respect to that connection's weight is negative [for a step size of 10% of the weight's current
   value] (increase that value to decrease the total cost)"
@@ -257,3 +229,11 @@ test-value-inputs
                 (conj res-in (up-ten-percent ((weights outer-ct) inner-ct)))
                 (inc inner-ct)))))))
       (inc outer-ct)))))
+
+
+(def a (reshape (get-training-data 3 2) 3))  ;; 2 generations, 3 input/output pairs per batch
+(def settings (train-network a 784 15 10 2))
+(time (train-network a 784 15 10 2))  ;;~224 seconds
+
+
+
