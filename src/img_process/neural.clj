@@ -108,12 +108,12 @@
     0.01
     (* 0.9 value)))
 
-(defn train-network [train-data input-n layer-a-n layer-b-n]
-  "takes a 2D array of correct input/output pairs of training data - a single row to be used for each
-  generation of training, the number of inputs to the network, the number of neurons in the first and
-  second layers. Returns a key value mapping of `trained` weights and biases for the network. W
-  orks by randomly initializing weights and biases and then following a gradient decent algorithm to
-  minimize the cost of the network over each generation w.r.t. each weight and bias."
+(defn train-network [training-data input-n layer-a-n layer-b-n sample-n]
+  "takes an array of correct input/output pairs of training data, the number of inputs to the network, the
+  number of neurons in the first and second layers, and the sample size for each training batch. Returns
+  a key value mapping of `trained` weights and biases for the network. Works by randomly initializing weights
+  and biases and then following a gradient decent algorithm to minimize the cost of the network over each
+  generation w.r.t. each weight and bias."
   )
 
 
