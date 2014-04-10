@@ -72,92 +72,16 @@
           (recur res)
           (recur (conj res temp)))))))
 
-(defn get-training-data1 [batch-size batch-num]
-  ;;;;;;; THIS WILL BE UPDATED DEPENDING ON WHICH FILE WE ARE READING DATA FROM    ;;;;;;;;;;;;;
-  "takes the size of each training batch and the number of batches, returns a 2D vector
-  of randomly selected input and output data"
-  (let [line-numbers (get-random-set (* batch-size batch-num) 99)]
-    (with-open [rdr (clojure.java.io/reader "resources/train_hundo.txt")]
-      (let [lines (line-seq rdr)]
-        (loop [i 0 f (apply max line-numbers) res [] lines lines]
-          (if (> i f)
-            res
-            (if (some #{i} line-numbers)
-              (recur
-               (inc i)
-               f
-               (conj res (json-2-training-pair (json/read-str (first lines))))
-               (drop 1 lines))
-              (recur
-               (inc i)
-               f
-               res
-               (drop 1 lines)))))))))
-
-
-(defn get-training-data2 [batch-size batch-num]
-  ;;;;;;; THIS WILL BE UPDATED DEPENDING ON WHICH FILE WE ARE READING DATA FROM    ;;;;;;;;;;;;;
-  "takes the size of each training batch and the number of batches, returns a 2D vector
-  of randomly selected input and output data"
-  (let [line-numbers (get-random-set (* batch-size batch-num) 99)]
-    (with-open [rdr (clojure.java.io/reader "resources/train_hundo.txt")]
-      (let [lines (line-seq rdr)]
-        (for [i (range (apply max line-numbers))]
-          (let [res []]
-            (if (some #{i} line-numbers)
-              (doall
-               (inc i)
-               (conj res (json-2-training-pair (json/read-str (first lines))))
-               (drop 1 lines))
-              (doall
-               (inc i)
-               (drop 1 lines)))
-            res))))))
-
 (defn get-training-data [batch-size batch-num]
   ;;;;;;; THIS WILL BE UPDATED DEPENDING ON WHICH FILE WE ARE READING DATA FROM    ;;;;;;;;;;;;;
   "takes the size of each training batch and the number of batches, returns a 2D vector
   of randomly selected input and output data"
-  (let [line-numbers (get-random-set (* batch-size batch-num) 99)]
-    (with-open [rdr (clojure.java.io/reader "resources/train_hundo.txt")]
-      (let [lines (line-seq rdr) res []]
-        (doall
-         (for
-           [i ((map-indexed (fn [idx itm] [idx itm]) lines))
-              :let [res (conj res (json-2-training-pair (json/read-str (i 1))))]
-              :when (some #{(i 0)} line-numbers)]
-          res))))))
-
-
-(defn get-training-data [batch-size batch-num]
-  ;;;;;;; THIS WILL BE UPDATED DEPENDING ON WHICH FILE WE ARE READING DATA FROM    ;;;;;;;;;;;;;
-  "takes the size of each training batch and the number of batches, returns a 2D vector
-  of randomly selected input and output data"
-  (let [line-numbers (get-random-set (* batch-size batch-num) 59990)]
-    (with-open [rdr (clojure.java.io/reader "resources/testing.txt")]
+  (let [line-numbers (get-random-set (* batch-size batch-num) 49990)]
+    (with-open [rdr (clojure.java.io/reader "resources/training.txt")]
       (doall (let [lines (line-seq rdr)
             indexed-lines (map-indexed (fn [idx itm] [idx itm]) lines)]
             (map (fn [idx-item] (json-2-training-pair (json/read-str (idx-item 1))))
-                 (filter #(some #{(first %)} line-numbers) indexed-lines)))))))
-
-(get-training-data 10 10)
-
-
-(let [res []]
-  (for [i (range 10)
-        :let [res (conj res i)]
-        :when (odd? i)]
-    (doall
-     (println i)
-     res)))
-
-
-(let [res []]
-  (for [i (range 10)
-        :let [res (conj res i)]
-        :when (odd? i)]
-    res))
-
+             (filter #(some #{(first %)} line-numbers) indexed-lines)))))))
 
 (defn reshape [vect width]
   "takes a 1D vector and reshapes to as a 2d vector of the specified width"
@@ -296,10 +220,7 @@
       (inc outer-ct)))))
 
 
-(def a (reshape (get-training-data 5 5) 5))  ;; 2 generations, 3 input/output pairs per batch
-(count a)
+(def a (reshape (shuffle (vec (get-training-data 3 2))) 2))  ;; 2 generations, 3 input/output pairs per batch
 (def settings (train-network a 784 15 10 2))
 (time (train-network a 784 15 10 2))  ;;~224 seconds
-
-
 
