@@ -1,5 +1,7 @@
+(ns img-process.initial)
+
 ;; 785 x 15
-(def init-weights-a [
+(def settings-a-ini [
 [ 3.700e-1   1.480e+0
 -9.260e-2   5.880e-2
  5.230e-1   1.210e+0
@@ -5898,7 +5900,7 @@
 
 
 ;;16 x 10
-(def init-weights-b
+(def settings-b-ini
   [
    [ 3.140e-1   4.100e-1
 -9.500e-1   1.100e+0
