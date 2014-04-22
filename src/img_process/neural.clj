@@ -39,10 +39,6 @@
 (defn get-cost [dsrd actl]
   "returns the cost of the network for a given input defined by the network's actual result for that
   input and the correct result for that input"
-  (println "hi")
-  (println dsrd)
-  (println actl)
-
   (* 0.5
      (reduce +
              (map (fn [%] (math/expt % 2))
@@ -58,9 +54,6 @@
   "takes a vector of inputs, settings (weights and biases 2d vector as wide as the next layer +1 for the biases),
   weights for the hidden and output layer, returns the resulting vector of the inputs propagated through the network."
   [inputs settings-a settings-b]
-  (println "herehere")
-  (println settings-a)
-  (println (sig-out inputs settings-a))
   (sig-out (sig-out inputs settings-a) settings-b))
 
 (defn json-2-training-pair [json-vec]
@@ -103,8 +96,6 @@
 (defn set-cost [training-set network]
   "takes a training set of key value pairs of inputs and results and returns the cost representing how
   wrong the weights and biases are for that random training set"
-   (println "network")
-   (println network)
    (reduce + (map #(get-cost (:result %) (evaluate (:input %) (:settings-a network) (:settings-b network))) training-set)))
 
 (defn up
@@ -126,36 +117,79 @@
   (let [settings (settings-key network)]
     (loop [out-ct 0 f (count settings) res-out []]
       (if (>= out-ct f)
-        (assoc network settings-key res-out)
-        (let [inner (settings out-ct)]
-          (loop [in-ct 0 g (count inner) res-in []]
-            (if (>= in-ct g)
-              (conj res-out res-in)
-              (let [mutant (assoc inner in-ct (+ (inner in-ct) step-size))]
-                (let [mutant-settings (assoc settings out-ct mutant)]
-                  (let [mutant-network (assoc network settings-key mutant-settings)]
-                    (if (> (set-cost training-set network)
-                           (set-cost training-set mutant-network))
-                      (recur
-                       (inc in-ct)
-                       g
-                       (conj res-in (+ (inner in-ct) step-size)))
-                      (recur
-                       (inc in-ct)
-                       f
-                       (conj res-in (- (inner in-ct) step-size)))))))))))
-      (recur
-       (inc out-ct)
-       f
-       ())))
+        res-out
+        (recur
+         (inc out-ct)
+         f
+         (conj res-out
+               (let [inner (settings out-ct)]
+                 (println out-ct)
+                 (println "inner")
+                 (println inner)
+                 (loop [in-ct 0 g (count inner) res-in []]
+                   (if (>= in-ct g)
+                     res-in
+                     (let [mutant (assoc inner in-ct (+ (inner in-ct) step-size))]
+                       (let [mutant-settings (assoc settings out-ct mutant)]
+                         (let [mutant-network (assoc network settings-key mutant-settings)]
+                           (if (> (set-cost training-set network)
+                                  (set-cost training-set mutant-network))
+                             (recur
+                              (inc in-ct)
+                              g
+                              (conj res-in (+ (inner in-ct) step-size)))
+                             (recur
+                              (inc in-ct)
+                              f
+                              (conj res-in (- (inner in-ct) step-size))))))))))))))))
 
+(defn settings-change-1
+  "accepts a training set the network as is and a step size, returns the as it should look to follow gradient descent
+  settings-a updated to follow gradient descent to minimize wrongness."
+  [training-set network step-size settings-key]
+  (let [settings (settings-key network)]
+    (loop [out-ct 0 f (count settings) res-out []]
+      (if (< out-ct f)
+
+        res-out
+        (recur
+         (inc out-ct)
+         f
+         (conj res-out
+               (let [inner (settings out-ct)]
+                 (println out-ct)
+                 (println "inner")
+                 (println inner)
+                 (loop [in-ct 0 g (count inner) res-in []]
+                   (if (>= in-ct g)
+                     res-in
+                     (let [mutant (assoc inner in-ct (+ (inner in-ct) step-size))]
+                       (let [mutant-settings (assoc settings out-ct mutant)]
+                         (let [mutant-network (assoc network settings-key mutant-settings)]
+                           (if (> (set-cost training-set network)
+                                  (set-cost training-set mutant-network))
+                             (recur
+                              (inc in-ct)
+                              g
+                              (conj res-in (+ (inner in-ct) step-size)))
+                             (recur
+                              (inc in-ct)
+                              f
+                              (conj res-in (- (inner in-ct) step-size))))))))))))))))
+
+
+
+(def training-day (reshape (shuffle (vec (get-training-data 10 3))) 10))
+(settings-change (training-day 0) (:network network-state) 1 :settings-a)
 
 (defn settings-update
   "accepts a training set of data (a vector of :input :result maps) the current settings of the network and reutrns the
   network such that the settings have been changed to reduce the wrongness of the network for that training set."
   [training-set network step-size]
-  {:settings-a (settings-change training-set network step-size :settings-a)
-   :settings-b (settings-change training-set network step-size :settings-b)})
+  (let [alpha (settings-change training-set network step-size :settings-a)
+        beta  (settings-change training-set network step-size :settings-b)]
+      {:settings-a alpha
+       :settings-b beta}))
 
 
 (defn train-network [network-state init-jump batch-size num-gens]
@@ -175,5 +209,5 @@
 
 
 (def network-state {:network {:settings-a initial/settings-a-ini :settings-b initial/settings-b-ini} :gen 1})
-
+network-state
 (train-network network-state 2 10 3)
