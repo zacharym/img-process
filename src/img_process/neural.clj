@@ -26,7 +26,7 @@
   a 1 to the end of the input."
   [in settings]
   (let [inputs (conj in 1)]
-    (map (fn[%] (sigmoid (dot inputs %))) settings)))
+    (vec (map (fn[%] (sigmoid (dot inputs %))) settings))))
 
 (defn vec-length [vec1]
   "returns the length of a vector in multiple dimensions (each element represents a scalar in a different
@@ -39,10 +39,15 @@
 (defn get-cost [dsrd actl]
   "returns the cost of the network for a given input defined by the network's actual result for that
   input and the correct result for that input"
+  (println "hi")
+  (println dsrd)
+  (println actl)
+
   (* 0.5
-     (reduce + (map (fn [%] (math/expt % 2))
-      (for [i (range (count dsrd))]
-        (- (dsrd i) (actl i)))))))
+     (reduce +
+             (map (fn [%] (math/expt % 2))
+                  (vec (for [i (range (count dsrd))]
+                    (- ((vec dsrd) i) ((vec actl) i))))))))
 
 (defn round-3
   "returns a float of the input rounded to 3 decimal places"
@@ -53,6 +58,9 @@
   "takes a vector of inputs, settings (weights and biases 2d vector as wide as the next layer +1 for the biases),
   weights for the hidden and output layer, returns the resulting vector of the inputs propagated through the network."
   [inputs settings-a settings-b]
+  (println "herehere")
+  (println settings-a)
+  (println (sig-out inputs settings-a))
   (sig-out (sig-out inputs settings-a) settings-b))
 
 (defn json-2-training-pair [json-vec]
@@ -95,7 +103,9 @@
 (defn set-cost [training-set network]
   "takes a training set of key value pairs of inputs and results and returns the cost representing how
   wrong the weights and biases are for that random training set"
-  (reduce + (map #(get-cost (:result %) (evaluate (:input %) (:settings-a network) (:settings-b network))) training-set)))
+   (println "network")
+   (println network)
+   (reduce + (map #(get-cost (:result %) (evaluate (:input %) (:settings-a network) (:settings-b network))) training-set)))
 
 (defn up
   "accepts a value, an initial value for increasing, and the generation number that we've trained thus far.
@@ -114,24 +124,31 @@
   settings-a updated to follow gradient descent to minimize wrongness."
   [training-set network step-size settings-key]
   (let [settings (settings-key network)]
-    (print settings)
-    (println (count settings))
-    (println (count (settings 0)))
-    (loop [i 0 f (count settings) res []]
-      (if (>= i f)
-        (assoc network settings-key res))
-      (let [mutant (assoc settings i (+ (settings i) step-size))]
-        (let [mutant-network (assoc network settings-key mutant)]
-          (if (> (set-cost training-set network)
-                 (set-cost training-set mutant-network))
-            (recur
-             (inc i)
-             f
-             (conj res (+ (settings i) step-size)))
-            (recur
-             (inc i)
-             f
-             (conj res (- (settings i) step-size)))))))))
+    (loop [out-ct 0 f (count settings) res-out []]
+      (if (>= out-ct f)
+        (assoc network settings-key res-out)
+        (let [inner (settings out-ct)]
+          (loop [in-ct 0 g (count inner) res-in []]
+            (if (>= in-ct g)
+              (conj res-out res-in)
+              (let [mutant (assoc inner in-ct (+ (inner in-ct) step-size))]
+                (let [mutant-settings (assoc settings out-ct mutant)]
+                  (let [mutant-network (assoc network settings-key mutant-settings)]
+                    (if (> (set-cost training-set network)
+                           (set-cost training-set mutant-network))
+                      (recur
+                       (inc in-ct)
+                       g
+                       (conj res-in (+ (inner in-ct) step-size)))
+                      (recur
+                       (inc in-ct)
+                       f
+                       (conj res-in (- (inner in-ct) step-size)))))))))))
+      (recur
+       (inc out-ct)
+       f
+       ())))
+
 
 (defn settings-update
   "accepts a training set of data (a vector of :input :result maps) the current settings of the network and reutrns the
