@@ -114,10 +114,13 @@
   settings-a updated to follow gradient descent to minimize wrongness."
   [training-set network step-size settings-key]
   (let [settings (settings-key network)]
+    (print settings)
+    (println (count settings))
+    (println (count (settings 0)))
     (loop [i 0 f (count settings) res []]
       (if (>= i f)
         (assoc network settings-key res))
-      (let [mutant (assoc settings i (up (settings i)))]
+      (let [mutant (assoc settings i (+ (settings i) step-size))]
         (let [mutant-network (assoc network settings-key mutant)]
           (if (> (set-cost training-set network)
                  (set-cost training-set mutant-network))
@@ -134,8 +137,8 @@
   "accepts a training set of data (a vector of :input :result maps) the current settings of the network and reutrns the
   network such that the settings have been changed to reduce the wrongness of the network for that training set."
   [training-set network step-size]
-  {:settings-a (settings-change (training-set network step-size :settings-a))
-   :settings-b (settings-change (training-set network step-size :settings-b))})
+  {:settings-a (settings-change training-set network step-size :settings-a)
+   :settings-b (settings-change training-set network step-size :settings-b)})
 
 
 (defn train-network [network-state init-jump batch-size num-gens]
@@ -156,3 +159,4 @@
 
 (def network-state {:network {:settings-a initial/settings-a-ini :settings-b initial/settings-b-ini} :gen 1})
 
+(train-network network-state 2 10 3)
