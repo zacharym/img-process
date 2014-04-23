@@ -7,5 +7,6 @@
                  [net.mikera/imagez "0.3.1"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/data.json "0.2.4"]
-                 [org.clojure/test.check "0.5.7"]])
+                 [org.clojure/test.check "0.5.7"]]
+  :main img-process.neural)
 
