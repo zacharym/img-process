@@ -153,4 +153,4 @@
     (let [res (train-network initial/initial-values jump batch-size num-gens)]
       (spit dst res :append true)))
 (defn -main[]
-  (go 0.05 1 1 "resources/training-log/results1.txt"))
+  (go 0.025 20 8 "resources/training-log/results3.txt"))

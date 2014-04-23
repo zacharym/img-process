@@ -131,18 +131,15 @@
         get-continuous-fill
         strip-empties
         get-bounds-with-padding))
-(load-image-resource "resources/written.jpg")
 
 (defn get-full-bounds [src]
-  (let [text (load-image-resource "resources/written.jpg") row-bounds (get-row-bounds text)]
+  (let [text (load-image-resource src) row-bounds (get-row-bounds text)]
   {:rows row-bounds :letters (get-letter-bounds row-bounds text)}))
 
-
-(get-row-bounds (load-image-resource "resources/written.jpg"))
-
-(get-letter-bounds (get-row-bounds (load-image-resource "resources/written.jpg")) (load-image-resource "resources/written.jpg"))
-
-(get-full-bounds "resources/written.jpg")
+(.getHeight (load-image-resource "resources/numbers.jpg"))
+(.getWidth (load-image-resource "resources/numbers.jpg"))
 
 
+
+(get-full-bounds "resources/numbers.jpg")
 
