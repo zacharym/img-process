@@ -3,7 +3,7 @@
             [img-process.protocols :as protos]
             [clojure.math.numeric-tower :as math])
   (:import  [java.awt.image BufferedImage BufferedImageOp]
-            [java.awt.Rectangle Rectangle]
+            [java.awt.Rectangle]
             [awt.color]))
 
 (defn new-buffered
@@ -134,15 +134,8 @@
         get-bounds-with-padding)))
 
 (defn get-full-bounds [src]
-  (let [text (load-image-resource src) row-bounds (get-row-bounds text)]
-  {:rows row-bounds :letters (vec (get-letter-bounds row-bounds text))}))
-
-(def testing (get-full-bounds "resources/written.jpg"))
-(def writ (load-image-resource "resources/written.jpg"))
-testing
-
-(get-full-bounds "resources/numbers.jpg")
-(interleave (:rows testing) (:letters testing))
+  (let [row-bounds (get-row-bounds src)]
+  {:rows row-bounds :letters (vec (get-letter-bounds row-bounds src))}))
 
 
 (defn get-sub-section [bounds src]
@@ -161,21 +154,25 @@ testing
           {:x-begin (+ (:x-begin bounds) (/ diff 2)) :x-end (- (:x-end bounds) (/ diff 2))
            :y-begin (:y-begin bounds) :y-end (:y-end bounds)})))))
 
-(defn get-characters [bounds src]
- (fn [row letters]
-   (map #(get-sub-section
-          (square-bounds
-          {:x-begin (:begin %) :x-end (:end %) :y-begin (:begin row) :y-end (:end row)})
-          src)))
-  (:rows bounds) (:letters bounds))
-
-(get-characters testing)
-
-
-(get-sub-image 49 65 24 42 writ)
+(defn square-bounds-1 [bounds]
+  bounds)
 
 
 
+(defn get-characters [bounds]
+ (map (fn [row letters]
+   (map (fn [%] {:x-begin (:begin %) :x-end (:end %) :y-begin (:begin row) :y-end (:end row)}) letters))
+  (:rows bounds) (:letters bounds)))
+
+(defn get-sub-images [img-file]
+  (let [src (load-image-resource img-file)
+        char-bounds (get-characters (get-full-bounds src))]
+    (map (fn[bounds]
+           (map #(get-sub-section % src) bounds)) char-bounds)))
+
+()
+
+(get-characters (get-full-bounds (load-image-resource "resources/numbers.jpg")))
 
 
 ;;get sub image

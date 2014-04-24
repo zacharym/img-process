@@ -143,14 +143,25 @@
   (let [training-data (reshape (shuffle (vec (get-training-data batch-size num-gens))) batch-size)]
     (reduce
      (fn [accum cur-set]
-       (with-open [wrtr (clojure.java.io/writer "resources/training-log/network4.txt" :append true)]
+       (with-open [wrtr (clojure.java.io/writer "resources/training-log/network5.txt" :append true)]
          (.write wrtr (json/write-str accum)))
        {:network (settings-update cur-set (:network accum) jump) :gen (inc (:gen accum))})
      network-state
      training-data)))
 
 (defn go [jump batch-size num-gens dst]
-    (let [res (train-network initial/initial-values-3 jump batch-size num-gens)]
+    (let [res (train-network initial/initial-values-5 jump batch-size num-gens)]
       (spit dst res :append true)))
 (defn -main[]
-  (go 0.01 20 12 "resources/training-log/results6.txt"))
+  (go 0.01 20 6 "resources/training-log/results8.txt"))
+
+(def test-data (get-training-data 10 3))
+
+(def tdata (reshape (vec test-data) 10))
+(def tnet (:network initial/initial-values-5))
+
+(:input ((tdata 0) 3))
+(:result ((tdata 0) 3))
+(evaluate (:input ((tdata 0) 3)) (:settings-a tnet) (:settings-b tnet))
+
+
