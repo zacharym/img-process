@@ -140,41 +140,43 @@
 
 (defn get-sub-section [bounds src]
   (let [begin-x (:x-begin bounds) end-x (:x-end bounds) begin-y (:y-begin bounds) end-y (:y-end bounds)]
-    (let [rect (new java.awt.Rectangle (- end-x begin-x) (- end-y begin-y) begin-x begin-y)]
+    (let [rect (new java.awt.Rectangle  begin-x begin-y (- end-x begin-x) (- end-y begin-y))]
       (.getData src rect))))
 
-(defn square-bounds [bounds]
-  (let [width (- (:x-end bounds) (:x-begin bounds)) height (- (:y-end bounds) (:y-begin bounds))]
-    (let [diff (- width height)]
-      (if (odd? diff)
-        (recur (assoc bounds :x-end (inc (:x-end bounds))))
-        (if (pos? diff)
-          {:x-begin (:x-begin bounds) :x-end (:x-end bounds)
-           :y-begin (- (:y-begin bounds) (/ diff 2)) :y-end (+ (:y-end bounds) (/ diff 2))}
-          {:x-begin (+ (:x-begin bounds) (/ diff 2)) :x-end (- (:x-end bounds) (/ diff 2))
-           :y-begin (:y-begin bounds) :y-end (:y-end bounds)})))))
+(defn make-even-height [bounds]
+  (if (odd? (- (:y-end bounds) (:y-begin bounds)))
+    (assoc bounds :y-end (inc (:y-end bounds)))
+    bounds))
 
-(defn square-bounds-1 [bounds]
-  bounds)
+(defn make-even-width [bounds]
+  (if (odd? (- (:x-end bounds) (:x-begin bounds)))
+    (assoc bounds :x-end (inc (:x-end bounds)))
+    bounds))
 
-
+(defn square-bounds [in-bounds]
+  (let [bounds ((comp make-even-width make-even-height) in-bounds)
+        width (- (:x-end bounds) (:x-begin bounds)) height (- (:y-end bounds) (:y-begin bounds))]
+    (if (> height width)
+     (let [diff (/ (- height width) 2)]
+       {:x-begin (- (:x-begin bounds) diff) :x-end (+ (:x-end bounds) diff) :y-begin (:y-begin bounds) :y-end (:y-end bounds)})
+      (let [diff (/ (- width height) 2)]
+        {:x-begin (:x-begin bounds) :x-end (:x-end bounds) :y-begin (- (:y-begin bounds) diff) :y-end (+ (:y-end bounds) diff)}))))
 
 (defn get-characters [bounds]
  (map (fn [row letters]
-   (map (fn [%] {:x-begin (:begin %) :x-end (:end %) :y-begin (:begin row) :y-end (:end row)}) letters))
+   (vec (map (fn [%] {:x-begin (:begin %) :x-end (:end %) :y-begin (:begin row) :y-end (:end row)}) letters)))
   (:rows bounds) (:letters bounds)))
 
-(defn get-sub-images [img-file]
-  (let [src (load-image-resource img-file)
-        char-bounds (get-characters (get-full-bounds src))]
-    (map (fn[bounds]
-           (map #(get-sub-section % src) bounds)) char-bounds)))
+(defn get-images [char-locations]
+  (map (fn [row-chars] (vec (map square-bounds row-chars))) char-locations))
 
-()
+(defn get-character-image-bounds [src-file]
+  (let [src (load-image-resource src-file)]
+    (get-images (get-characters (get-full-bounds src)))))
 
-(get-characters (get-full-bounds (load-image-resource "resources/numbers.jpg")))
-
-
-;;get sub image
-;;resize image into 28x28
-;;take greyscale score for each
+(defn get-character-images [src-file]
+  (let [image-bounds (get-character-image-bounds src-file)
+        src (load-image-resource src-file)]
+    (map (fn [row]
+           (vec (map #(get-sub-section % src) row)))
+         image-bounds)))
