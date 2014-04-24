@@ -3,6 +3,7 @@
             [img-process.protocols :as protos]
             [clojure.math.numeric-tower :as math])
   (:import  [java.awt.image BufferedImage BufferedImageOp]
+            [java.awt.Rectangle Rectangle]
             [awt.color]))
 
 (defn new-buffered
@@ -28,7 +29,7 @@
   "retuns a binary score for whether or not a mark is present at a particular
   pixel location"
   (let [c (new java.awt.Color (.getRGB src pos-x pos-y))]
-    (if (<= 120 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
+    (if (<= 40 (/ (+ (.getRed c) (.getGreen c) (.getBlue c)) 3))
       0
       1)))
 
@@ -116,30 +117,67 @@
   (filter #(pos? (count %)) values))
 
 (defn get-letter-bounds [row-bounds src]
-    (map (fn [{:keys [begin end]}]
+    (vec (map (fn [{:keys [begin end]}]
          (-> (get-column-scores begin end src)
              mapper
              get-continuous-fill
              strip-empties
              get-bounds))
-       row-bounds))
+       row-bounds)))
 
 (defn get-row-bounds [src]
-    (-> (get-row-scores (.getHeight src) (.getWidth src) src)
+    (vec (-> (get-row-scores (.getHeight src) (.getWidth src) src)
         get-std-diff-values2
         mapper
         get-continuous-fill
         strip-empties
-        get-bounds-with-padding))
+        get-bounds-with-padding)))
 
 (defn get-full-bounds [src]
   (let [text (load-image-resource src) row-bounds (get-row-bounds text)]
-  {:rows row-bounds :letters (get-letter-bounds row-bounds text)}))
+  {:rows row-bounds :letters (vec (get-letter-bounds row-bounds text))}))
 
-(.getHeight (load-image-resource "resources/numbers.jpg"))
-(.getWidth (load-image-resource "resources/numbers.jpg"))
-
-
+(def testing (get-full-bounds "resources/written.jpg"))
+(def writ (load-image-resource "resources/written.jpg"))
+testing
 
 (get-full-bounds "resources/numbers.jpg")
+(interleave (:rows testing) (:letters testing))
 
+
+(defn get-sub-section [bounds src]
+  (let [begin-x (:x-begin bounds) end-x (:x-end bounds) begin-y (:y-begin bounds) end-y (:y-end bounds)]
+    (let [rect (new java.awt.Rectangle (- end-x begin-x) (- end-y begin-y) begin-x begin-y)]
+      (.getData src rect))))
+
+(defn square-bounds [bounds]
+  (let [width (- (:x-end bounds) (:x-begin bounds)) height (- (:y-end bounds) (:y-begin bounds))]
+    (let [diff (- width height)]
+      (if (odd? diff)
+        (recur (assoc bounds :x-end (inc (:x-end bounds))))
+        (if (pos? diff)
+          {:x-begin (:x-begin bounds) :x-end (:x-end bounds)
+           :y-begin (- (:y-begin bounds) (/ diff 2)) :y-end (+ (:y-end bounds) (/ diff 2))}
+          {:x-begin (+ (:x-begin bounds) (/ diff 2)) :x-end (- (:x-end bounds) (/ diff 2))
+           :y-begin (:y-begin bounds) :y-end (:y-end bounds)})))))
+
+(defn get-characters [bounds src]
+ (fn [row letters]
+   (map #(get-sub-section
+          (square-bounds
+          {:x-begin (:begin %) :x-end (:end %) :y-begin (:begin row) :y-end (:end row)})
+          src)))
+  (:rows bounds) (:letters bounds))
+
+(get-characters testing)
+
+
+(get-sub-image 49 65 24 42 writ)
+
+
+
+
+
+;;get sub image
+;;resize image into 28x28
+;;take greyscale score for each
