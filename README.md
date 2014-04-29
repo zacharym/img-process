@@ -18,8 +18,10 @@ The code is broken down into the following sections:
 
 ## Usage
 
-To train the network you need to update neural.clj and then you can lein run the project. A live version where can upload
-an image to be analyzed will be live soon.
+To train the network you need to update neural.clj and then you can lein run the project.
+
+A live version where you can upload an image to be analyzed will is coming soon. Depends on successful interfacing of
+neural.clj and image_access.clj
 
 ## License
 
