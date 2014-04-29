@@ -3,15 +3,18 @@
 This is Clojure project for recognizing images of handwritten characters representing the digits 0-9
 
 The code is broken down into the following sections:
-*image_access.clj: this is the vision module for analyzing an image of a block of text, identifying the pixel coordinates
-where characters lay in the image, accessing the locations of those characters, re-sizing them to square blocks that in
-the proper dimensions that the neural network is configured to receive, and processing those image blocks to prepare a
-vectorized representation each character of it's lightness or darkness score on a scale from 0-1.
-*neural.clj: this is the main file for defining the neural networks processing and training algorithms
-*initial.clj: this is where the neural net reads networks settings from for initializing before training or for processing
-an input
-*resources/training-log: update the destination in the neural.clj file when beginning training
-*resources: training data, sample images to test with
+
+
+*image_access.clj:
+  * this is the vision module for analyzing an image of a block of text, identifying the pixel coordinates where characters lay in the image, accessing the locations of those characters, re-sizing them to square blocks that in the proper dimensions that the neural network is configured to receive, and processing those image blocks to prepare a vectorized representation each character of it's lightness or darkness score on a scale from 0-1.
+*neural.clj:
+  * this is the main file for defining the neural networks processing and training algorithms
+*initial.clj:
+  * this is where the neural net reads networks settings from for initializing before training or for processing an input
+*resources/training-log:
+  * update the destination in the neural.clj file when beginning training
+*resources:
+  * training data, sample images to test with
 
 ## Usage
 
