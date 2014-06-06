@@ -1,4 +1,4 @@
-;; this file from Mikera's image processing library imagez.
+;; this file is from Mikera's image processing library imagez.
 (ns img-process.protocols
   (:require [clojure.java.io :refer [as-file file]])
   (:import java.io.File

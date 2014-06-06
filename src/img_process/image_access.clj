@@ -2,15 +2,18 @@
   (:require [clojure.java.io :refer [file resource]]
             [img-process.protocols :as protos]
             [clojure.math.numeric-tower :as math])
-  (:import  [java.awt.image BufferedImage BufferedImageOp]
+  (:import  [java.awt.image BufferedImage BufferedImageOp IndexColorModel]
             [java.awt.Rectangle]
+            [java.awt.Graphics2D]
+            [org.imgscalr Scalr]
             [awt.color]))
 
+;;From Mikera's Imagez Library
 (defn new-buffered
   "Creates java buffered image"
   (^BufferedImage [width height]
     (BufferedImage. (int width) (int height) BufferedImage/TYPE_INT_RGB)))
-
+;;From Mikera's Imagez Library
 (defn load-image
   "Loads a BufferedImage from a string, file or a URL representing a resource
   on the classpath.
@@ -19,11 +22,23 @@
     ;; (require [clojure.java.io :refer [resource]])
     (load-image (resource \"some/path/to/image.png\"))"
   (^BufferedImage [resource] (protos/as-image resource)))
-
+;;From Mikera's Imagez Library
 (defn load-image-resource [res-path]
   "Loads an image from a named resource on the classpath.
    Equivalent to (load-image (clojure.java.io/resource res-path))"
   (load-image res-path))
+;;From Mikera's Imagez Library
+(defn resize
+  "Resizes an image to the specified width and height. If height is omitted,
+  maintains the aspect ratio."
+  (^BufferedImage [^BufferedImage image new-width new-height]
+    (Scalr/resize image
+                  org.imgscalr.Scalr$Method/BALANCED
+                  org.imgscalr.Scalr$Mode/FIT_EXACT
+                  (int new-width) (int new-height) nil))
+  (^BufferedImage [^BufferedImage image new-width]
+    (resize new-width (/ (* new-width (.getHeight image)) (.getWidth image)))))
+
 
 (defn get-px-bin [pos-x pos-y src]
   "retuns a binary score for whether or not a mark is present at a particular
@@ -181,9 +196,38 @@
            (vec (map #(get-sub-section % src) row)))
          image-bounds)))
 
+;;(defn size-to-28
+;;  "accepts a square raster of any size and resizes to a 28 px x 28px"
+;;  [raster])
+
+(defn raster-to-image [raster]
+  "accepts a raster and returns an image constructed from that raster"
+  (.IndexColorModel (.convertToIntDiscrete raster true)))
+
+((test-data 0) 0)
+(raster-to-image ((test-data 0) 0))
+;;(defn prep-for-reading
+;;  "accepts a 2d vector of rasters containing character images, returns a 2-d vector of the same shape
+;;  of sub-2d-vectors representing 28px x 28px mappings of the images where values are darkness scores
+;; in range (0,1). Such a result may be interpreted by neuarl.clj/evaluate"
+;;  [character-images]
+;;  )
+;; BufferedImage 	IndexColorModel.convertToIntDiscrete(Raster raster, boolean forceARGB)
+;; Returns a new BufferedImage of TYPE_INT_ARGB or TYPE_INT_RGB that has a Raster with pixel data
+;; computed by expanding the indices in the source Raster using the color/alpha component arrays of this ColorModel.
 
 
 
 
+
+
+(time (def temp (get-character-images "resources/numbers.jpg")))
+
+(def test-data (vec temp))
+test-data
+(resize  (((test-data 0) 0)) 28 28)
+
+BufferedImage scaledImage = new BufferedImage(
+width, height, BufferedImage.TYPE_INT_ARGB);
 
 

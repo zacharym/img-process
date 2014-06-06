@@ -30,7 +30,7 @@
 
 (defn vec-length [vec1]
   "returns the length of a vector in multiple dimensions (each element represents a scalar in a different
-  dimension). Interestingly the pythagorean theorem is the 2 dimensional case of this."
+  dimension). Interestingly, the pythagorean theorem is the 2 dimensional case of this."
   (->> vec1
    (map #(math/expt % 2))
    (reduce +)
