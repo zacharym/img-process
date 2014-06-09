@@ -153,10 +153,20 @@
   {:rows row-bounds :letters (vec (get-letter-bounds row-bounds src))}))
 
 
+
+
+
+
+
+
+
 (defn get-sub-section [bounds src]
   (let [begin-x (:x-begin bounds) end-x (:x-end bounds) begin-y (:y-begin bounds) end-y (:y-end bounds)]
-    (let [rect (new java.awt.Rectangle  begin-x begin-y (- end-x begin-x) (- end-y begin-y))]
-      (.getData src rect))))
+    (.getSubimage src begin-x begin-y (- end-x begin-x) (- end-y begin-y))))
+
+
+
+
 
 (defn make-even-height [bounds]
   (if (odd? (- (:y-end bounds) (:y-begin bounds)))
@@ -196,16 +206,14 @@
            (vec (map #(get-sub-section % src) row)))
          image-bounds)))
 
-;;(defn size-to-28
-;;  "accepts a square raster of any size and resizes to a 28 px x 28px"
-;;  [raster])
+
 
 (defn raster-to-image [raster]
   "accepts a raster and returns an image constructed from that raster"
   (.IndexColorModel (.convertToIntDiscrete raster true)))
 
-((test-data 0) 0)
-(raster-to-image ((test-data 0) 0))
+;;((test-data 0) 0)
+;;(raster-to-image ((test-data 0) 0))
 ;;(defn prep-for-reading
 ;;  "accepts a 2d vector of rasters containing character images, returns a 2-d vector of the same shape
 ;;  of sub-2d-vectors representing 28px x 28px mappings of the images where values are darkness scores
@@ -221,13 +229,14 @@
 
 
 
-(time (def temp (get-character-images "resources/numbers.jpg")))
+(def temp (get-character-images "resources/numbers.jpg"))
 
 (def test-data (vec temp))
 test-data
+
 (resize  (((test-data 0) 0)) 28 28)
 
-BufferedImage scaledImage = new BufferedImage(
-width, height, BufferedImage.TYPE_INT_ARGB);
+;;BufferedImage scaledImage = new BufferedImage(
+;;width, height, BufferedImage.TYPE_INT_ARGB);
 
 
