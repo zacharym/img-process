@@ -2,7 +2,7 @@
   (:require [clojure.java.io :refer [file resource]]
             [img-process.protocols :as protos]
             [clojure.math.numeric-tower :as math])
-  (:import  [java.awt.image BufferedImage BufferedImageOp IndexColorModel]
+  (:import  [java.awt.image BufferedImage BufferedImageOp AffineTransform AffineTransformOp]
             [java.awt.Rectangle]
             [java.awt.Graphics2D]
             [org.imgscalr Scalr]
@@ -152,21 +152,9 @@
   (let [row-bounds (get-row-bounds src)]
   {:rows row-bounds :letters (vec (get-letter-bounds row-bounds src))}))
 
-
-
-
-
-
-
-
-
-(defn get-sub-section [bounds src]
+(defn get-sub-section-image [bounds src]
   (let [begin-x (:x-begin bounds) end-x (:x-end bounds) begin-y (:y-begin bounds) end-y (:y-end bounds)]
-    (.getSubimage src begin-x begin-y (- end-x begin-x) (- end-y begin-y))))
-
-
-
-
+    (resize (.getSubimage src begin-x begin-y (- end-x begin-x) (- end-y begin-y)) 28 28)))
 
 (defn make-even-height [bounds]
   (if (odd? (- (:y-end bounds) (:y-begin bounds)))
@@ -203,27 +191,8 @@
   (let [image-bounds (get-character-image-bounds src-file)
         src (load-image-resource src-file)]
     (map (fn [row]
-           (vec (map #(get-sub-section % src) row)))
+           (vec (map #(get-sub-section-image % src) row)))
          image-bounds)))
-
-
-
-(defn raster-to-image [raster]
-  "accepts a raster and returns an image constructed from that raster"
-  (.IndexColorModel (.convertToIntDiscrete raster true)))
-
-;;((test-data 0) 0)
-;;(raster-to-image ((test-data 0) 0))
-;;(defn prep-for-reading
-;;  "accepts a 2d vector of rasters containing character images, returns a 2-d vector of the same shape
-;;  of sub-2d-vectors representing 28px x 28px mappings of the images where values are darkness scores
-;; in range (0,1). Such a result may be interpreted by neuarl.clj/evaluate"
-;;  [character-images]
-;;  )
-;; BufferedImage 	IndexColorModel.convertToIntDiscrete(Raster raster, boolean forceARGB)
-;; Returns a new BufferedImage of TYPE_INT_ARGB or TYPE_INT_RGB that has a Raster with pixel data
-;; computed by expanding the indices in the source Raster using the color/alpha component arrays of this ColorModel.
-
 
 
 
@@ -232,11 +201,6 @@
 (def temp (get-character-images "resources/numbers.jpg"))
 
 (def test-data (vec temp))
+(resize ((test-data 0) 0) 28 28)
+
 test-data
-
-(resize  (((test-data 0) 0)) 28 28)
-
-;;BufferedImage scaledImage = new BufferedImage(
-;;width, height, BufferedImage.TYPE_INT_ARGB);
-
-
